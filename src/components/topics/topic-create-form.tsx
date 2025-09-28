@@ -1,14 +1,17 @@
 "use client";
+
+import { useActionState, startTransition } from "react";
+
 import {
   Input,
   Button,
   Textarea,
   Popover,
-  PopoverContent,
   PopoverTrigger,
+  PopoverContent,
+  Form,
 } from "@nextui-org/react";
 import * as actions from "@/actions";
-import { useActionState, startTransition } from "react";
 
 export default function TopicCreateForm() {
   const [formState, action] = useActionState(actions.createTopic, {
@@ -26,38 +29,38 @@ export default function TopicCreateForm() {
   return (
     <Popover placement="left">
       <PopoverTrigger>
-        <Button color="primary">Create Topic</Button>
+        <Button color="primary">Create a Topic</Button>
       </PopoverTrigger>
       <PopoverContent>
-        <form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 p-4 w-80">
-            <h3 className="text-lg">Create a topic</h3>
+            <h3 className="text-lg">Create a Topic</h3>
             <Input
-              name="Name" //used in server action
+              name="name"
               label="Name"
               labelPlacement="outside"
               placeholder="Name"
-              isInvalid={!!formState.errors.name?.length}
+              isInvalid={!!formState.errors.name}
               errorMessage={formState.errors.name?.join(", ")}
             />
             <Textarea
-              name="Description" //used in server action
+              name="description"
               label="Description"
               labelPlacement="outside"
               placeholder="Describe your topic"
-              isInvalid={!!formState.errors.description?.length}
+              isInvalid={!!formState.errors.description}
               errorMessage={formState.errors.description?.join(", ")}
             />
-            {formState.errors._form && (
+
+            {formState.errors._form ? (
               <div className="rounded p-2 bg-red-200 border border-red-400">
-                {formState.errors._form.join(", ")}
+                {formState.errors._form?.join(', ')}
               </div>
-            )}
-            <Button type="submit" color="primary">
-              Submit
-            </Button>
+            ) : null}
+
+            <Button type="submit">Submit</Button>
           </div>
-        </form>
+        </Form>
       </PopoverContent>
     </Popover>
   );

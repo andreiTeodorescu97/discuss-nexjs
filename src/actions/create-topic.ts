@@ -1,20 +1,20 @@
-"use server";
-import { db } from "@/db";
-import { z } from "zod";
-import { auth } from "@/auth";
-import type { Topic } from "@prisma/client";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import paths from "@/paths";
+'use server';
 
-const creatTopicSchema = z.object({
+import type { Topic } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
+import { auth } from '@/auth';
+import { db } from '@/db';
+import paths from '@/paths';
+
+const createTopicSchema = z.object({
   name: z
     .string()
     .min(3)
-    .regex(/^[a-z-]+$/, {
-      message: "must be lower case letters or dashes without spaces",
-    })
-    .max(100),
+    .regex(/[a-z-]/, {
+      message: 'Must be lowercase letters or dashes without spaces',
+    }),
   description: z.string().min(10),
 });
 
@@ -30,20 +30,23 @@ export async function createTopic(
   formState: CreateTopicFormState,
   formData: FormData
 ): Promise<CreateTopicFormState> {
-  //revalidate home page after creating a topic
-  const result = creatTopicSchema.safeParse({
-    name: formData.get("Name"),
-    description: formData.get("Description"),
+  const result = createTopicSchema.safeParse({
+    name: formData.get('name'),
+    description: formData.get('description'),
   });
+
   if (!result.success) {
     return {
       errors: result.error.flatten().fieldErrors,
     };
   }
+
   const session = await auth();
   if (!session || !session.user) {
     return {
-      errors: { _form: ["You must be signed in to do this."] },
+      errors: {
+        _form: ['You must be signed in to do this.'],
+      },
     };
   }
 
@@ -58,15 +61,19 @@ export async function createTopic(
   } catch (err: unknown) {
     if (err instanceof Error) {
       return {
-        errors: { _form: [err.message] },
+        errors: {
+          _form: [err.message],
+        },
       };
     } else {
       return {
-        errors: { _form: ["Something went wrong"] },
+        errors: {
+          _form: ['Something went wrong'],
+        },
       };
     }
   }
-  
-  revalidatePath(paths.home());
+
+  revalidatePath('/');
   redirect(paths.topicShow(topic.slug));
 }
