@@ -28,7 +28,7 @@ export const {
     //usually not needed, fixing a bug in next-auth
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, user }: any) {
-      if (session.user) {
+      if (session && user) {
         session.user.id = user.id;
       }
       return session;
