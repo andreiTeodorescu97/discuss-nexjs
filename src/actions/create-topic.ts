@@ -1,19 +1,19 @@
-'use server';
+"use server";
 
-import type { Topic } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { z } from 'zod';
-import { auth } from '@/auth';
-import { db } from '@/db';
-import paths from '@/paths';
+import type { Topic } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { auth } from "@/auth";
+import { db } from "@/db";
+import paths from "@/paths";
 
 const createTopicSchema = z.object({
   name: z
     .string()
     .min(3)
     .regex(/[a-z-]/, {
-      message: 'Must be lowercase letters or dashes without spaces',
+      message: "Must be lowercase letters or dashes without spaces",
     }),
   description: z.string().min(10),
 });
@@ -31,8 +31,8 @@ export async function createTopic(
   formData: FormData
 ): Promise<CreateTopicFormState> {
   const result = createTopicSchema.safeParse({
-    name: formData.get('name'),
-    description: formData.get('description'),
+    name: formData.get("name"),
+    description: formData.get("description"),
   });
 
   if (!result.success) {
@@ -42,10 +42,21 @@ export async function createTopic(
   }
 
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user || !session.user.id) {
     return {
       errors: {
-        _form: ['You must be signed in to do this.'],
+        _form: ["You must be signed in to do this."],
+      },
+    };
+  }
+
+  const existingTopic = await db.topic.findFirst({
+    where: { slug: result.data.name },
+  });
+  if (existingTopic) {
+    return {
+      errors: {
+        _form: ["Topic already exists with this name"],
       },
     };
   }
@@ -68,12 +79,12 @@ export async function createTopic(
     } else {
       return {
         errors: {
-          _form: ['Something went wrong'],
+          _form: ["Something went wrong"],
         },
       };
     }
   }
 
-  revalidatePath('/');
+  revalidatePath("/");
   redirect(paths.topicShow(topic.slug));
 }
