@@ -8,7 +8,7 @@ export type PostWithData = Post & {
 };
 // export type PostWithData = Awaited<ReturnType<typeof fetchPostByTopicSlub>>[number];
 
-export async function fetchPostByTopicSlub(slug: string): Promise<PostWithData[]> {
+export function fetchPostByTopicSlub(slug: string): Promise<PostWithData[]> {
   return db.post.findMany({
     where: { topic: { slug: slug } },
     include: {  
@@ -17,5 +17,17 @@ export async function fetchPostByTopicSlub(slug: string): Promise<PostWithData[]
         _count: { select: { comments: true } },
     },
     orderBy: { createdAt: "desc" },
+  });
+}
+
+export function fetchTopPosts(): Promise<PostWithData[]> {
+  return db.post.findMany({
+    take: 5,
+    include: {  
+        topic: { select: { slug: true } },
+        user: { select: { name: true } },
+        _count: { select: { comments: true } },
+    },
+    orderBy: { comments: { _count: "desc" } },
   });
 }
